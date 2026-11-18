@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>If I had known… – Conditional 3</title>
+<style>
+:root{--bg:#EEF1F6;--ink:#14213D;--card:#fff;--blue:#2F5BFF;--ok:#0E9F6E;--no:#D6336C;--hl:#FFE066;--mut:#5B6785;--line:#D5DBE8;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#10162A;--ink:#EEF1F6;--card:#1B2440;--blue:#8CA4FF;--ok:#3DD6A0;--no:#FF7AA8;--hl:#6B5A00;--mut:#A3AECB;--line:#33406A;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.5 "Avenir Next","Trebuchet MS",system-ui,sans-serif}
+header{padding:22px 20px 8px;max-width:860px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:1.7rem;line-height:1.15}
+h1 small{display:block;font-size:1rem;font-weight:500;color:var(--mut);margin-top:4px}
+#score{font-weight:700;font-size:1.1rem;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 14px}
+nav{max-width:860px;margin:8px auto;padding:0 20px;display:flex;gap:8px;overflow-x:auto}
+nav button{flex:0 0 auto;min-height:48px;padding:0 16px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+nav button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+main{max-width:860px;margin:0 auto;padding:8px 20px 60px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 14px}
+.card.ok{border-color:var(--ok)}
+h2{margin:0 0 10px;font-size:1.3rem}
+p{margin:0 0 10px}
+.mut{color:var(--mut);font-size:.95rem}
+.if{background:var(--hl);border-radius:6px;padding:0 6px}
+.res{border-bottom:3px solid var(--blue);padding:0 2px}
+.btn{min-height:48px;padding:0 18px;border:2px solid var(--blue);background:var(--blue);color:#fff;border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--blue)}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.opt,.tok{min-height:48px;padding:6px 14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;font:inherit;cursor:pointer}
+.opt.ok,.tok.ok,.m.ok{border-color:var(--ok);background:var(--ok);color:#fff}
+.opt.no,.m.no{border-color:var(--no);animation:sh .25s}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media(prefers-reduced-motion:reduce){.opt.no,.m.no{animation:none}}
+.blank{display:inline-block;min-width:3.5em;border-bottom:3px solid var(--blue);text-align:center}
+.zone{min-height:58px;border:2px dashed var(--line);border-radius:12px;padding:6px;display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:8px 10px;min-height:48px}
+input[type=text]{width:12em;max-width:100%}
+input.ok{border-color:var(--ok)}input.no{border-color:var(--no)}
+textarea{width:100%;min-height:90px;display:block}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m{min-height:64px;text-align:left;padding:8px 12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;font:inherit;cursor:pointer}
+.m.sel{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue)}
+.fb{font-weight:700;margin-top:8px;min-height:1.5em}
+table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media(max-width:560px){.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>If I had known…<small>Conditional 3 · practice for B1</small></h1>
+<div id="score" aria-live="polite">0 / 0</div>
+</header>
+<nav id="nav" role="tablist"></nav>
+<main id="main"></main>
+<script>
+const $=s=>document.querySelector(s);
+const norm=s=>s.toLowerCase().replace(/[’‘]/g,"'").replace(/\bhad not\b/g,"hadn't").replace(/\bwould not have\b/g,"wouldn't have").replace(/\s+/g," ").trim();
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const done={mc:new Set(),build:new Set(),gap:new Set(),match:new Set()};
+const total={mc:6,build:5,gap:5,match:5};
+const upd=()=>{let s=0,t=0;for(const k in done){s+=done[k].size;t+=total[k]}$('#score').textContent=s+' / '+t+' correct'};
+
+const MC=[
+["If I ___ my phone charger, I would have sent you a message.",["had taken","would take","took"],0],
+["If we had left earlier, we ___ the bus.",["wouldn’t have missed","hadn’t missed","wouldn’t miss"],0],
+["She would have passed the test if she ___ more.",["had studied","would study","has studied"],0],
+["If he ___ the penalty, we would have won the match.",["had scored","would have scored","scored"],0],
+["They would have come to the party if you ___ them.",["had invited","would have invited","invited"],0],
+["If I hadn’t been so tired, I ___ to the concert.",["would have gone","had gone","would go"],0]];
+const BUILD=[
+"If I had studied, I would have passed the test.",
+"If she had called me, I would have answered.",
+"We would have won if we had trained harder.",
+"If it hadn’t rained, we would have played football.",
+"He would have been late if he hadn’t taken a taxi."];
+const GAP=[
+["If I (know) about the party, I (come) to it.",["had known","would have come"]],
+["If she (not / forget) her ticket, she (see) the film.",["hadn't forgotten","would have seen"]],
+["We (win) the game if we (not / play) so badly.",["would have won","hadn't played"]],
+["If you (tell) me, I (help) you.",["had told","would have helped"]],
+["He (not / miss) the train if he (leave) earlier.",["wouldn't have missed","had left"]]];
+const MATCH=[
+["If I had saved more money,","I would have bought the sneakers."],
+["If she had set an alarm,","she wouldn’t have overslept."],
+["If we had checked the weather,","we would have taken umbrellas."],
+["If he had charged his phone,","he would have posted the photo."],
+["If you had asked me,","I would have helped you."]];
+const YOU=["If I hadn’t joined ______, I would have ______.","If I had known ______, I would have ______.","I would have ______ yesterday if I had ______."];
+
+const tabs={rule:"The rule",mc:"Choose",build:"Build it",gap:"Fill in",match:"Match",you:"Your turn"};
+const nav=$('#nav');
+for(const k in tabs){const b=document.createElement('button');b.textContent=tabs[k];b.setAttribute('role','tab');b.dataset.k=k;b.onclick=()=>show(k);nav.appendChild(b)}
+function show(k){[...nav.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.k===k));const m=$('#main');m.innerHTML='';R[k](m);window.scrollTo(0,0)}
+const el=(h)=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
+
+const R={
+rule(m){
+m.append(el(`<div class="card"><h2>When do we use it?</h2><p>We talk about the <b>past</b> and imagine something different. It did not happen, so we can’t change it.</p>
+<p><span class="if">If I had set an alarm</span>, <span class="res">I would have caught the bus.</span></p>
+<p class="mut">Reality: I didn’t set an alarm, so I missed the bus.</p></div>`));
+m.append(el(`<div class="card"><h2>How do we build it?</h2>
+<p><span class="if">if + had + past participle</span> , <span class="res">would have + past participle</span></p>
+<p>Short forms: I’d known · hadn’t · wouldn’t have. With the if-part first, we use a comma.</p>
+<p>⚠ Never use <i>would</i> in the if-part.<br>✗ If I would have known… ✓ If I <b>had known</b>…</p>
+<p class="mut">Deutsch: Wenn ich den Wecker gestellt hätte, hätte ich den Bus bekommen.</p></div>`));
+m.append(el(`<div class="card"><h2>Past participles you need</h2><table>
+<tr><td>take – took – <b>taken</b></td><td>see – saw – <b>seen</b></td></tr>
+<tr><td>go – went – <b>gone</b></td><td>buy – bought – <b>bought</b></td></tr>
+<tr><td>win – won – <b>won</b></td><td>forget – forgot – <b>forgotten</b></td></tr></table></div>`));
+},
+mc(m){
+MC.forEach(([q,o,c],i)=>{
+const card=el(`<div class="card"><p>${i+1}. ${q.replace('___','<span class="blank">&nbsp;</span>')}</p><div class="opts"></div><div class="fb"></div></div>`);
+const box=card.querySelector('.opts');
+shuffle(o.map((t,j)=>[t,j])).forEach(([t,j])=>{
+const b=el(`<button class="opt">${t}</button>`);
+b.onclick=()=>{if(j===c){b.classList.add('ok');card.classList.add('ok');card.querySelector('.blank').textContent=t;card.querySelector('.fb').textContent='✓ Correct!';box.querySelectorAll('button').forEach(x=>x.disabled=true);done.mc.add(i);upd()}
+else{b.classList.add('no');setTimeout(()=>b.classList.remove('no'),400);card.querySelector('.fb').textContent='Not quite. Think: had + past participle or would have + past participle?'}};
+box.append(b)});
+m.append(card)})},
+build(m){
+m.append(el('<p class="mut">Tap the words in the right order. Tap a word in the box again to take it back.</p>'));
+BUILD.forEach((s,i)=>{
+const words=s.split(' ');let pick=[];
+const card=el(`<div class="card"><b>${i+1}.</b><div class="zone ans"></div><div class="zone bank"></div><button class="btn">Check</button> <button class="btn ghost">Reset</button><div class="fb"></div></div>`);
+const ans=card.querySelector('.ans'),bank=card.querySelector('.bank'),fb=card.querySelector('.fb');
+const order=shuffle(words.map((w,j)=>j));
+const draw=()=>{ans.innerHTML='';bank.innerHTML='';
+pick.forEach(j=>{const b=el(`<button class="tok">${words[j]}</button>`);b.onclick=()=>{if(!card.classList.contains('ok')){pick=pick.filter(x=>x!==j);draw()}};ans.append(b)});
+order.filter(j=>!pick.includes(j)).forEach(j=>{const b=el(`<button class="tok">${words[j]}</button>`);b.onclick=()=>{if(!card.classList.contains('ok')){pick.push(j);fb.textContent='';draw()}};bank.append(b)})};
+const[bc,br]=card.querySelectorAll('.btn');
+bc.onclick=()=>{const t=pick.map(j=>words[j]).join(' ');if(norm(t)===norm(s)){card.classList.add('ok');fb.textContent='✓ Great sentence!';done.build.add(i);upd()}else fb.textContent='Not yet. Which part comes first: the if-part or the result?'};
+br.onclick=()=>{if(!card.classList.contains('ok')){pick=[];fb.textContent='';draw()}};
+draw();m.append(card)})},
+gap(m){
+m.append(el('<p class="mut">Put the verbs in the correct form. You can write short forms like hadn’t.</p>'));
+GAP.forEach(([q,a],i)=>{
+let n=0;
+const card=el(`<div class="card"><p>${i+1}. ${q.replace(/\(([^)]*)\)/g,(x,v)=>`<input type="text" aria-label="gap ${++n}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"> <span class="mut">(${v})</span>`)}</p><button class="btn">Check</button><div class="fb"></div></div>`);
+card.querySelector('.btn').onclick=()=>{
+const ins=[...card.querySelectorAll('input')];let all=true;
+ins.forEach((x,j)=>{const ok=norm(x.value)===norm(a[j]);x.classList.toggle('ok',ok);x.classList.toggle('no',!ok);if(!ok)all=false});
+if(all){card.classList.add('ok');card.querySelector('.fb').textContent='✓ Both gaps are correct!';done.gap.add(i);upd()}else card.querySelector('.fb').textContent='Check the red gaps. Hint: had + past participle / would have + past participle.'};
+m.append(card)})},
+match(m){
+m.append(el('<p class="mut">Tap a beginning, then tap the ending that fits.</p>'));
+const card=el('<div class="card"><div class="cols"><div class="L"></div><div class="Rr"></div></div><div class="fb"></div></div>');
+let sel=null;const L=card.querySelector('.L'),Rr=card.querySelector('.Rr');
+MATCH.forEach(([a],i)=>{const b=el(`<button class="m" style="width:100%;margin-bottom:8px">${a}</button>`);b.dataset.i=i;b.onclick=()=>{if(b.classList.contains('ok'))return;L.querySelectorAll('.m').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=b};L.append(b)});
+shuffle(MATCH.map((p,i)=>[p[1],i])).forEach(([t,i])=>{const b=el(`<button class="m" style="width:100%;margin-bottom:8px">${t}</button>`);b.onclick=()=>{if(!sel||b.classList.contains('ok'))return;
+if(+sel.dataset.i===i){sel.classList.remove('sel');sel.classList.add('ok');b.classList.add('ok');done.match.add(i);sel=null;upd();if(done.match.size===total.match)card.querySelector('.fb').textContent='✓ All pairs matched!'}
+else{b.classList.add('no');setTimeout(()=>b.classList.remove('no'),400);card.querySelector('.fb').textContent='Not a match. Does the ending make sense for that situation?'}};Rr.append(b)});
+m.append(card)},
+you(m){
+m.append(el('<div class="card"><h2>Your turn</h2><p>Finish the sentences about your own life. Then read them to a partner. Can they guess what really happened?</p></div>'));
+YOU.forEach((s,i)=>m.append(el(`<div class="card"><p>${i+1}. ${s}</p><textarea aria-label="Your sentence ${i+1}" placeholder="Write your full sentence here…"></textarea></div>`)))}
+};
+upd();show('rule');
+</script>
+</body>
+</html>
